@@ -225,52 +225,76 @@ def show_tool(name: str):
 
 @app.command("search")
 def search(
-    q: str = typer.Argument(..., help="Search text (name/desc/command)"),
+    q: Optional[str] = typer.Argument(None, help="Search text (omit to match all)"),
     tag: Optional[str] = typer.Option(None, "--tag", "-t", help="Filter by tag"),
+    tool: Optional[str] = typer.Option(None, "--tool", "-T", help="Restrict to this tool"),
+    cmd: Optional[str]  = typer.Option(None, "--cmd", "-C", help="Restrict by command name"),
+    exact: bool = typer.Option(False, "--exact", help="Use exact match for --cmd"),
 ):
-    """Search tools and commands."""
-    like = f"%{q}%"
-    with db() as conn:
-        if tag:
-            rows = conn.execute(
-                """
-                SELECT tools.name, COALESCE(commands.name, ''), COALESCE(commands.snippet, ''), COALESCE(commands.description, '')
-                FROM tools
-                JOIN tool_tags ON tool_tags.tool_id=tools.id
-                JOIN tags ON tags.id=tool_tags.tag_id
-                LEFT JOIN commands ON commands.tool_id=tools.id
-                WHERE tags.name=? AND (
-                    tools.name LIKE ? OR tools.description LIKE ? OR
-                    commands.name LIKE ? OR commands.description LIKE ? OR commands.snippet LIKE ?
-                )
-                ORDER BY tools.name
-                """,
-                (tag, like, like, like, like, like),
-            ).fetchall()
+    """Search tools/commands with optional filters by tag, tool, and command name."""
+    like = f"%{q}%" if q else None
+
+    # Build query parts
+    sql = [
+        "SELECT tools.name, COALESCE(commands.name, ''),",
+        "       COALESCE(commands.snippet, ''), COALESCE(commands.description, '')",
+        "FROM tools",
+    ]
+    params = []
+    conditions = []
+
+    if tag:
+        sql += [
+            "JOIN tool_tags ON tool_tags.tool_id = tools.id",
+            "JOIN tags ON tags.id = tool_tags.tag_id",
+        ]
+
+    sql += ["LEFT JOIN commands ON commands.tool_id = tools.id"]
+
+    if like:
+        conditions.append(
+            "("
+            "tools.name LIKE ? OR tools.description LIKE ? OR "
+            "commands.name LIKE ? OR commands.description LIKE ? OR commands.snippet LIKE ?"
+            ")"
+        )
+        params.extend([like, like, like, like, like])
+
+    if tag:
+        conditions.append("tags.name = ?")
+        params.append(tag)
+
+    if tool:
+        conditions.append("tools.name = ?")
+        params.append(tool)
+
+    if cmd:
+        if exact:
+            conditions.append("commands.name = ?")
+            params.append(cmd)
         else:
-            rows = conn.execute(
-                """
-                SELECT tools.name, COALESCE(commands.name, ''), COALESCE(commands.snippet, ''), COALESCE(commands.description, '')
-                FROM tools
-                LEFT JOIN commands ON commands.tool_id=tools.id
-                WHERE tools.name LIKE ? OR tools.description LIKE ?
-                   OR commands.name LIKE ? OR commands.description LIKE ? OR commands.snippet LIKE ?
-                ORDER BY tools.name
-                """,
-                (like, like, like, like, like),
-            ).fetchall()
+            conditions.append("commands.name LIKE ?")
+            params.append(f"%{cmd}%")
+
+    sql_str = "\n".join(sql)
+    if conditions:
+        sql_str += "\nWHERE " + " AND ".join(conditions)
+    sql_str += "\nORDER BY tools.name, commands.name"
+
+    with db() as conn:
+        rows = conn.execute(sql_str, params).fetchall()
 
     if not rows:
         console.print("No results.")
         raise typer.Exit(0)
 
-    table = Table(title=f"Search: {q}", show_lines=False)
+    table = Table(title=f"Search: {q or '*'}", show_lines=False)
     table.add_column("Tool", style="bold")
     table.add_column("Command")
     table.add_column("Summary")
-    for tool, cname, snip, cdesc in rows:
+    for tool_name, cname, snip, cdesc in rows:
         summary = cdesc or (snip[:60] + "…" if snip and len(snip) > 60 else snip)
-        table.add_row(tool, cname, summary or "")
+        table.add_row(tool_name, cname, summary or "")
     console.print(table)
 
 @app.command("rm-tool")
