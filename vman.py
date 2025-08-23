@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# vman.py — your personal, pretty CLI man page
 from __future__ import annotations
 
 import os
