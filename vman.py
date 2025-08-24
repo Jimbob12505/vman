@@ -18,6 +18,13 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.rule import Rule
 
+# --- fuzzy deps (add near other imports) ---
+try:
+    from rapidfuzz import process, fuzz
+    HAS_RF = True
+except Exception:  # RapidFuzz not installed
+    HAS_RF = False
+
 # ------------------------------------------------------------
 # App setup
 # ------------------------------------------------------------
