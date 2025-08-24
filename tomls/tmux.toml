@@ -1,0 +1,317 @@
+title = "vman import: tmux CLI"
+
+[[tools]]
+name = "tmux"
+description = "Terminal multiplexer: persistent sessions, windows, panes; great for workflows, remote work, and multiplexing."
+tags = ["terminal","multiplexer","sessions","windows","panes","productivity","cli"]
+
+  # ---------------- Sessions ----------------
+  [[tools.commands]]
+  name = "new-session"
+  description = "Create a new session with a name and start tmux. Equivalent to starting tmux fresh."
+  snippet = "tmux new -s <session>"
+
+  [[tools.commands]]
+  name = "attach"
+  description = "Attach to an existing session by name."
+  snippet = "tmux attach -t <session>"
+
+  [[tools.commands]]
+  name = "attach-or-create"
+  description = "Attach to a session if it exists; otherwise create it (handy single-command workflow)."
+  snippet = "tmux new -A -s <session>"
+
+  [[tools.commands]]
+  name = "list-sessions"
+  description = "List all sessions with windows and attached clients."
+  snippet = "tmux ls"
+
+  [[tools.commands]]
+  name = "rename-session"
+  description = "Rename the current (or target) session."
+  snippet = "tmux rename-session -t <old> <new>"
+
+  [[tools.commands]]
+  name = "switch-session"
+  description = "Switch the active client to another session (like prefix+())."
+  snippet = "tmux switch-client -t <session>"
+
+  [[tools.commands]]
+  name = "detach"
+  description = "Detach the current client from its session (leave it running)."
+  snippet = "tmux detach-client"
+
+  [[tools.commands]]
+  name = "kill-session"
+  description = "Kill a specific session by name (closes all its windows/panes)."
+  snippet = "tmux kill-session -t <session>"
+
+  [[tools.commands]]
+  name = "kill-server"
+  description = "Kill the **entire** tmux server (all sessions/windows/panes)."
+  snippet = "tmux kill-server"
+
+  # ---------------- Windows (tabs) ----------------
+  [[tools.commands]]
+  name = "new-window"
+  description = "Create a new window in the current session, optionally named or starting a command."
+  snippet = "tmux new-window -n <name> <optional-cmd>"
+
+  [[tools.commands]]
+  name = "list-windows"
+  description = "List windows in the current/target session with indexes and names."
+  snippet = "tmux list-windows -t <session>"
+
+  [[tools.commands]]
+  name = "select-window"
+  description = "Switch to a window by index or name."
+  snippet = "tmux select-window -t :<index>"
+
+  [[tools.commands]]
+  name = "rename-window"
+  description = "Rename the current window (useful for labeling tasks)."
+  snippet = "tmux rename-window <new-name>"
+
+  [[tools.commands]]
+  name = "move-window"
+  description = "Move a window to a new index or even into another session."
+  snippet = "tmux move-window -s :<src-index> -t :<dst-index>"
+
+  [[tools.commands]]
+  name = "link-window"
+  description = "Link a window from another session (window appears in both)."
+  snippet = "tmux link-window -s <src-session>:<src-index> -t <dst-session>:"
+
+  [[tools.commands]]
+  name = "kill-window"
+  description = "Close the current (or target) window."
+  snippet = "tmux kill-window -t :<index>"
+
+  [[tools.commands]]
+  name = "find-window"
+  description = "Search window titles/commands for a pattern and jump to it."
+  snippet = "tmux find-window -t <session> <pattern>"
+
+  # ---------------- Panes (splits) ----------------
+  [[tools.commands]]
+  name = "split-vertical"
+  description = "Split the current pane **vertically** (stacked)."
+  snippet = "tmux split-window -v"
+
+  [[tools.commands]]
+  name = "split-horizontal"
+  description = "Split the current pane **horizontally** (side-by-side)."
+  snippet = "tmux split-window -h"
+
+  [[tools.commands]]
+  name = "select-pane"
+  description = "Focus a pane by direction (Left/Right/Up/Down) or by index."
+  snippet = "tmux select-pane -L  # or -R/-U/-D"
+
+  [[tools.commands]]
+  name = "swap-panes"
+  description = "Swap two panes' positions."
+  snippet = "tmux swap-pane -s <src-pane> -t <dst-pane>"
+
+  [[tools.commands]]
+  name = "kill-pane"
+  description = "Close the current pane."
+  snippet = "tmux kill-pane"
+
+  [[tools.commands]]
+  name = "resize-pane"
+  description = "Resize the current pane N cells (Left/Right/Up/Down)."
+  snippet = "tmux resize-pane -L <N>  # or -R/-U/-D <N>"
+
+  [[tools.commands]]
+  name = "zoom-pane"
+  description = "Toggle zoom for the current pane (full-window)."
+  snippet = "tmux resize-pane -Z"
+
+  [[tools.commands]]
+  name = "break-pane"
+  description = "Break the current pane into its **own window**."
+  snippet = "tmux break-pane"
+
+  [[tools.commands]]
+  name = "join-pane"
+  description = "Join a pane from another window into the current window."
+  snippet = "tmux join-pane -s <src-win>.<src-pane> -t <dst-win>"
+
+  [[tools.commands]]
+  name = "display-panes"
+  description = "Overlay pane numbers temporarily (helps target by number)."
+  snippet = "tmux display-panes"
+
+  # ---------------- Layouts ----------------
+  [[tools.commands]]
+  name = "layout-even-horizontal"
+  description = "Evenly spread panes horizontally (stacked rows)."
+  snippet = "tmux select-layout even-horizontal"
+
+  [[tools.commands]]
+  name = "layout-even-vertical"
+  description = "Evenly spread panes vertically (side-by-side columns)."
+  snippet = "tmux select-layout even-vertical"
+
+  [[tools.commands]]
+  name = "layout-tiled"
+  description = "Tile all panes to fit the window neatly."
+  snippet = "tmux select-layout tiled"
+
+  [[tools.commands]]
+  name = "layout-main-vertical"
+  description = "Main pane on **left**, others stacked on the **right**."
+  snippet = "tmux select-layout main-vertical"
+
+  [[tools.commands]]
+  name = "layout-main-horizontal"
+  description = "Main pane on **top**, others stacked **below**."
+  snippet = "tmux select-layout main-horizontal"
+
+  [[tools.commands]]
+  name = "choose-tree"
+  description = "Interactive tree of sessions/windows/panes; jump quickly."
+  snippet = "tmux choose-tree -Zw"
+
+  # ---------------- Copy mode, buffers & clipboard ----------------
+  [[tools.commands]]
+  name = "copy-mode"
+  description = "Enter copy mode to scroll/search; use vi/emacs keys depending on your config."
+  snippet = "tmux copy-mode"
+
+  [[tools.commands]]
+  name = "capture-pane-to-file"
+  description = "Capture the visible history of the current pane to a file."
+  snippet = "tmux capture-pane -pS -2000 > <file.txt>"
+
+  [[tools.commands]]
+  name = "copy-last-buffer-macos"
+  description = "Copy the most recent tmux buffer to macOS clipboard (pbcopy)."
+  snippet = "tmux show-buffer | pbcopy"
+
+  [[tools.commands]]
+  name = "capture-to-clipboard-macos"
+  description = "Capture the last 2000 lines of the current pane and copy to macOS clipboard."
+  snippet = "tmux capture-pane -pS -2000 | pbcopy"
+
+  [[tools.commands]]
+  name = "list-buffers"
+  description = "List tmux buffers (stored text copies)."
+  snippet = "tmux list-buffers"
+
+  [[tools.commands]]
+  name = "show-buffer"
+  description = "Print the contents of the latest (or named) buffer."
+  snippet = "tmux show-buffer  # or -b <buffer-index>"
+
+  [[tools.commands]]
+  name = "save-buffer"
+  description = "Save the most recent (or named) buffer to a file."
+  snippet = "tmux save-buffer -b <buffer-index> <file.txt>"
+
+  [[tools.commands]]
+  name = "delete-buffer"
+  description = "Delete a buffer by index."
+  snippet = "tmux delete-buffer -b <buffer-index>"
+
+  # ---------------- Sync panes, mouse, options ----------------
+  [[tools.commands]]
+  name = "sync-panes-on"
+  description = "Send the same keystrokes to **all panes** in the window (great for clusters)."
+  snippet = "tmux set-window-option synchronize-panes on"
+
+  [[tools.commands]]
+  name = "sync-panes-off"
+  description = "Disable synchronized input."
+  snippet = "tmux set-window-option synchronize-panes off"
+
+  [[tools.commands]]
+  name = "mouse-on"
+  description = "Enable mouse support (resize/select with mouse)."
+  snippet = "tmux set -g mouse on"
+
+  [[tools.commands]]
+  name = "mouse-off"
+  description = "Disable mouse support."
+  snippet = "tmux set -g mouse off"
+
+  [[tools.commands]]
+  name = "show-options"
+  description = "Show global options (use -w for window options, -p for pane options)."
+  snippet = "tmux show-options -g"
+
+  [[tools.commands]]
+  name = "set-option"
+  description = "Set a global option (example toggling status bar)."
+  snippet = "tmux set -g status on  # or off"
+
+  # ---------------- Copy/search helpers ----------------
+  [[tools.commands]]
+  name = "search-in-pane"
+  description = "Search the current pane history for a string and print lines (outside copy-mode)."
+  snippet = "tmux capture-pane -pS -5000 | grep -i \"<pattern>\""
+
+  [[tools.commands]]
+  name = "grep-session-commands"
+  description = "Search across all windows' commands/titles for a string."
+  snippet = "tmux list-windows -a -F '#S:#I:#W #{window_active} #{pane_current_command}' | grep -i \"<pattern>\""
+
+  # ---------------- Server/clients & diagnostics ----------------
+  [[tools.commands]]
+  name = "list-clients"
+  description = "List clients (terminals) attached to sessions."
+  snippet = "tmux list-clients"
+
+  [[tools.commands]]
+  name = "list-keys"
+  description = "List tmux key bindings (helpful to discover defaults and custom binds)."
+  snippet = "tmux list-keys"
+
+  [[tools.commands]]
+  name = "show-messages"
+  description = "Show tmux server log messages (errors, notices)."
+  snippet = "tmux show-messages"
+
+  [[tools.commands]]
+  name = "server-info"
+  description = "Display detailed server info (versions, terminals, features)."
+  snippet = "tmux info"
+
+  # ---------------- Config lifecycle ----------------
+  [[tools.commands]]
+  name = "reload-config"
+  description = "Reload ~/.tmux.conf and display a confirmation message."
+  snippet = "tmux source-file ~/.tmux.conf \\; display-message 'tmux.conf reloaded'"
+
+  [[tools.commands]]
+  name = "source-file"
+  description = "Source a given tmux config file."
+  snippet = "tmux source-file <path/to/file>"
+
+  # ---------------- Advanced piping & logging ----------------
+  [[tools.commands]]
+  name = "pipe-pane"
+  description = "Pipe the live output of the current pane to a shell command (e.g., log to file)."
+  snippet = "tmux pipe-pane -o 'cat >> <logfile.txt>'"
+
+  [[tools.commands]]
+  name = "capture-pane-raw"
+  description = "Capture **raw** pane content (no formatting) for exact logs."
+  snippet = "tmux capture-pane -J -pS -2000 > <out.txt>"
+
+  [[tools.commands]]
+  name = "choose-buffer"
+  description = "Interactive picker of buffers; paste the chosen one."
+  snippet = "tmux choose-buffer -Z"
+
+  [[tools.commands]]
+  name = "choose-client"
+  description = "Interactive picker of clients to interact with."
+  snippet = "tmux choose-client -Z"
+
+  [[tools.commands]]
+  name = "choose-window"
+  description = "Interactive picker of windows (choose-tree alternative)."
+  snippet = "tmux choose-window -Z"
+

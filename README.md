@@ -3,7 +3,7 @@
 *A writeable, searchable, beautiful CLI notebook for the exact commands **you** use — organized by tool, tagged, and instantly insertable into your shell prompt.*
 
 - **Writeable**: save your own commands/snippets with descriptions  
-- **Searchable**: find by tool, tag, description, command name, or snippet text  
+- **Searchable**: find by tool, tag, description, command name, or snippet text - **and fuzzy** 
 - **Fast entry**: `wizard`, `use` + `cmd`, quick one-liners (`qtool`, `qcmd`), TOML import  
 - **Pretty output**: tables & syntax highlighting (Rich)  
 - **Prompt insertion**: drop a snippet directly into your zsh prompt (edit placeholders, then hit Enter)  
@@ -20,6 +20,7 @@
 - [Core commands](#core-commands)
 - [Convenience commands (speedy entry)](#convenience-commands-speedy-entry)
 - [Search](#search)
+- [Fuzzy search & picker](#fuzzy-search--picker)
 - [Run / print snippets](#run--print-snippets)
 - [Prompt insertion (zsh)](#prompt-insertion-zsh)
 - [Bulk import / export](#bulk-import--export)
@@ -178,6 +179,69 @@ vman search "<text>" -t <tag>           # also filter by tag
 
 - Matches: tool **name/description**, command **name/description/snippet** (SQLite `LIKE`).
 
+---
+
+## Fuzzy search & picker
+
+Two ways to find commands fast:
+
+### 1) In-app fuzzy ranking (`vman fuzzy`)
+
+> No external UI; uses **RapidFuzz** for scoring.  
+> Install once: `~/vman/venv/bin/pip install rapidfuzz`
+
+```bash
+# Show top ranked matches for a query
+vman fuzzy "migrate db"
+
+# Choose a result and print snippet (default action)
+vman fuzzy "nginx" --choose
+
+# Restrict to a tool or tag; then execute chosen snippet
+vman fuzzy -T docker "build" --choose -x -y
+
+# Filter by tag
+vman fuzzy "deploy" -t prod --choose
+```
+
+#### Options
+```bash
+--tool, -T scope to a tool
+--tag, -t filter by tag
+--top, -n number of results to show (default 10)
+--choose, -c prompt to pick one result
+--exec, -x run the chosen snippet (default is print only)
+--yes, -y skip confirmation when executing
+--copy, -C copy snippet to clipboard
+--shell shell to execute under (when -x, default /bin/zsh)
+```
+
+### 2) Interactive picker `(vman pick)` with fzf
+
+> Full-screen filterable list with preview.
+> Install once: brew install fzf
+
+```bash
+# Open the menu; type to filter; Enter to select
+vman pick
+
+# Start with an initial query and restrict to one tool
+vman pick "build" -T docker
+
+# Select, then run immediately
+vman pick -T docker -x -y
+```
+- Tip — drop selection into your prompt (zsh):
+
+```bash
+# Add to ~/.zshrc
+vmpick() {
+  local s
+  s="$(vman pick "$@")" || return
+  print -z -- "$s"   # queued into your next prompt, ready to edit
+}
+# Usage: vmpick, vmpick -T docker, vmpick "logs" -T docker
+```
 ---
 
 ## Run / print snippets
