@@ -610,6 +610,193 @@ def import_toml(path: Path):
     console.print(Panel.fit(f"Imported {count_tools} tool(s), {count_cmds} command(s)."))
 
 # ------------------------------------------------------------
+# Fuzzfinder
+# ------------------------------------------------------------
+
+def _build_catalog(conn: sqlite3.Connection, tool: Optional[str] = None, tag: Optional[str] = None):
+    """
+    Return a list of items: {tool, cmd, desc, snippet, summary, search}
+    """
+    sql = [
+        "SELECT tools.name AS tool, commands.name AS cmd,",
+        "       COALESCE(commands.description, ''), COALESCE(commands.snippet, '')",
+        "FROM tools",
+        "LEFT JOIN commands ON commands.tool_id = tools.id",
+    ]
+    params = []
+    if tag:
+        sql.insert(3, "JOIN tool_tags ON tool_tags.tool_id = tools.id")
+        sql.insert(4, "JOIN tags ON tags.id = tool_tags.tag_id")
+
+    where = []
+    if tag:
+        where.append("tags.name = ?")
+        params.append(tag)
+    if tool:
+        where.append("tools.name = ?")
+        params.append(tool)
+
+    sql_str = "\n".join(sql)
+    if where:
+        sql_str += "\nWHERE " + " AND ".join(where)
+    sql_str += "\nORDER BY tools.name, commands.name"
+
+    rows = conn.execute(sql_str, params).fetchall()
+    items = []
+    for tool_name, cmd_name, desc, snip in rows:
+        if not cmd_name:  # skip tools that have no command row
+            continue
+        summary = desc or (snip[:80] + "…" if snip and len(snip) > 80 else snip)
+        searchable = " ".join(filter(None, [tool_name, cmd_name, desc, snip]))
+        items.append({
+            "tool": tool_name,
+            "cmd": cmd_name,
+            "desc": desc or "",
+            "snippet": snip or "",
+            "summary": summary or "",
+            "search": searchable
+        })
+    return items
+
+@app.command("fuzzy")
+def fuzzy(
+    query: Optional[str] = typer.Argument(None, help="Search text (optional)"),
+    tool: Optional[str] = typer.Option(None, "--tool", "-T", help="Restrict to one tool"),
+    tag: Optional[str]  = typer.Option(None, "--tag", "-t", help="Filter by tag"),
+    top: int = typer.Option(10, "--top", "-n", help="Number of results to show"),
+    choose: bool = typer.Option(False, "--choose", "-c", help="Prompt to choose and act on a result"),
+    exec_: bool = typer.Option(False, "--exec", "-x", help="Execute chosen snippet"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirm when executing"),
+    copy: bool = typer.Option(False, "--copy", "-C", help="Copy chosen snippet to clipboard"),
+    shell: str = typer.Option("/bin/zsh", "--shell", help="Shell to execute under with --exec"),
+):
+    """Fuzzy rank tools/commands (RapidFuzz). Use --choose to pick and act."""
+    if not HAS_RF:
+        raise typer.Exit("Fuzzy search requires 'rapidfuzz'. Install it with: pip install rapidfuzz")
+
+    with db() as conn:
+        catalog = _build_catalog(conn, tool=tool, tag=tag)
+    if not catalog:
+        console.print("No commands found.")
+        raise typer.Exit(0)
+
+    choices = [it["search"] for it in catalog]
+    if query:
+        matches = process.extract(query, choices, scorer=fuzz.WRatio, limit=top)
+        ranked = [(idx, score) for choice, score, idx in matches]
+    else:
+        # No query: just take the first N (alphabetical by tool/cmd due to ORDER BY)
+        ranked = [(i, 100) for i in range(min(top, len(catalog)))]
+
+    table = Table(title=f"Fuzzy: {query or '*'}", show_lines=False)
+    table.add_column("#", justify="right")
+    table.add_column("Tool", style="bold")
+    table.add_column("Command")
+    table.add_column("Score", justify="right")
+    table.add_column("Summary")
+    for k, (idx, score) in enumerate(ranked, start=1):
+        it = catalog[idx]
+        table.add_row(str(k), it["tool"], it["cmd"], str(int(score)), it["summary"])
+    console.print(table)
+
+    if not choose:
+        raise typer.Exit(0)
+
+    # choose & act
+    pick = typer.prompt("Pick #", type=int)
+    if pick < 1 or pick > len(ranked):
+        raise typer.Exit("Invalid selection.")
+    chosen = catalog[ranked[pick - 1][0]]
+
+    # optional clipboard
+    if copy:
+        try:
+            subprocess.run(["pbcopy"], input=(chosen["snippet"]).encode(), check=True)
+            console.print("[dim]Snippet copied to clipboard.[/]")
+        except Exception:
+            console.print("[dim]Clipboard copy failed (pbcopy not available).[/]")
+
+    if exec_:
+        if not yes and not typer.confirm(f"Run {chosen['tool']} · {chosen['cmd']} ?", default=False):
+            raise typer.Exit(1)
+        try:
+            subprocess.run([shell, "-lc", chosen["snippet"]], check=True)
+        except subprocess.CalledProcessError as e:
+            raise typer.Exit(e.returncode)
+    else:
+        # default: print raw snippet (so zsh widget or user can edit placeholders easily)
+        sys.stdout.write(chosen["snippet"] + ("\n" if not chosen["snippet"].endswith("\n") else ""))
+
+@app.command("pick")
+def pick(
+    query: Optional[str] = typer.Argument(None, help="Initial query for fzf"),
+    tool: Optional[str] = typer.Option(None, "--tool", "-T", help="Restrict to one tool"),
+    tag: Optional[str]  = typer.Option(None, "--tag", "-t", help="Filter by tag"),
+    exec_: bool = typer.Option(False, "--exec", "-x", help="Execute the selected snippet"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirm when executing"),
+    copy: bool = typer.Option(False, "--copy", "-C", help="Copy snippet to clipboard"),
+    shell: str = typer.Option("/bin/zsh", "--shell", help="Shell to execute under with --exec"),
+):
+    """Interactive picker using fzf (if installed). Prints snippet by default."""
+    if shutil.which("fzf") is None:
+        raise typer.Exit("fzf not found. Install with: brew install fzf  (or use: vman fuzzy --choose)")
+
+    with db() as conn:
+        catalog = _build_catalog(conn, tool=tool, tag=tag)
+    if not catalog:
+        console.print("No commands found.")
+        raise typer.Exit(0)
+
+    # Each line: TOOL \t CMD \t SUMMARY
+    lines = [f"{it['tool']}\t{it['cmd']}\t{it['summary']}" for it in catalog]
+
+    fzf_cmd = [
+        "fzf",
+        "--ansi",
+        "--delimiter", "\t",
+        "--with-nth", "1,2,3",
+        "--nth", "1,2,3",
+        "--bind", "alt-y:execute-silent(echo {1}\t{2} | pbcopy)+abort",
+        "--preview", "vman run {1} {2} --preview --no-raw",
+        "--prompt", "vman> ",
+    ]
+    if query:
+        fzf_cmd += ["--query", query]
+
+    p = subprocess.run(fzf_cmd, input=("\n".join(lines)).encode(), stdout=subprocess.PIPE)
+    if p.returncode != 0:
+        raise typer.Exit(p.returncode)
+    out = p.stdout.decode().strip().splitlines()
+    if not out:
+        raise typer.Exit(1)
+
+    tool_name, cmd_name, _ = out[-1].split("\t", 2)
+
+    # look up snippet
+    with db() as conn:
+        tid = get_tool_id(conn, tool_name)
+        row = conn.execute("SELECT snippet FROM commands WHERE tool_id=? AND name=?", (tid, cmd_name)).fetchone()
+    snippet = (row[0] if row else "").strip()
+
+    if copy:
+        try:
+            subprocess.run(["pbcopy"], input=snippet.encode(), check=True)
+            console.print("[dim]Snippet copied to clipboard.[/]")
+        except Exception:
+            console.print("[dim]Clipboard copy failed (pbcopy not available).[/]")
+
+    if exec_:
+        if not yes and not typer.confirm(f"Run {tool_name} · {cmd_name} ?", default=False):
+            raise typer.Exit(1)
+        try:
+            subprocess.run([shell, "-lc", snippet], check=True)
+        except subprocess.CalledProcessError as e:
+            raise typer.Exit(e.returncode)
+    else:
+        # default: print raw snippet
+        sys.stdout.write(snippet + ("\n" if not snippet.endswith("\n") else ""))
+
+# ------------------------------------------------------------
 # Optional: run a stored snippet (with confirm/copy)
 # ------------------------------------------------------------
 
