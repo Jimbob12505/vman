@@ -1,0 +1,140 @@
+title = "vman import: ironclad"
+
+[[tools]]
+name = "ironclad"
+description = "CLI utility for creating and managing encrypted password databases."
+tags = ["password", "manager", "database", "clipboard", "encryption"]
+
+  # -------- Basic Commands --------
+  [[tools.commands]]
+  name = "init"
+  description = "Initialize a new password database at path."
+  snippet = "ironclad init <dbfile>"
+
+  [[tools.commands]]
+  name = "add"
+  description = "Add a new entry; prompts for fields."
+  snippet = "ironclad add"
+
+  [[tools.commands]]
+  name = "edit"
+  description = "Edit an existing entry by ID or title substring."
+  snippet = "ironclad edit <entry>"
+
+  [[tools.commands]]
+  name = "gen"
+  description = "Generate a random password (set length/symbols as needed)."
+  snippet = "ironclad gen --length <n> --symbols"
+
+  [[tools.commands]]
+  name = "go"
+  description = "Open an entry's URL in your browser."
+  snippet = "ironclad go <entry>"
+
+  [[tools.commands]]
+  name = "list"
+  description = "List database entries."
+  snippet = "ironclad list"
+
+  [[tools.commands]]
+  name = "pass"
+  description = "Copy an entry's password to clipboard (auto-clears after timeout)."
+  snippet = "ironclad pass <entry>"
+
+  [[tools.commands]]
+  name = "retire"
+  description = "Mark one or more entries as inactive."
+  snippet = "ironclad retire <entry...>"
+
+  [[tools.commands]]
+  name = "show"
+  description = "Show full details (omit <entry> to show all)."
+  snippet = "ironclad show <entry>"
+
+  [[tools.commands]]
+  name = "url"
+  description = "Copy an entry's URL to clipboard."
+  snippet = "ironclad url <entry>"
+
+  [[tools.commands]]
+  name = "user"
+  description = "Copy an entry's username to clipboard."
+  snippet = "ironclad user <entry>"
+
+  # -------- Additional Commands --------
+  [[tools.commands]]
+  name = "config"
+  description = "Set or print a configuration option."
+  snippet = "ironclad config <key> <value>"
+
+  [[tools.commands]]
+  name = "decrypt"
+  description = "Decrypt a file to an output path."
+  snippet = "ironclad decrypt <input-file> <output-file>"
+
+  [[tools.commands]]
+  name = "dump"
+  description = "Dump the database's JSON data store to a file."
+  snippet = "ironclad dump > ironclad-dump.json"
+
+  [[tools.commands]]
+  name = "encrypt"
+  description = "Encrypt a file to an output path."
+  snippet = "ironclad encrypt <input-file> <output-file>"
+
+  [[tools.commands]]
+  name = "export"
+  description = "Export entries; choose format (json/csv)."
+  snippet = "ironclad export --format json > ironclad-export.json"
+
+  [[tools.commands]]
+  name = "import"
+  description = "Import entries from file."
+  snippet = "ironclad import <file>"
+
+  [[tools.commands]]
+  name = "purge"
+  description = "Purge inactive entries."
+  snippet = "ironclad purge"
+
+  [[tools.commands]]
+  name = "restore"
+  description = "Restore inactive entries."
+  snippet = "ironclad restore <entry...>"
+
+  [[tools.commands]]
+  name = "setcachepass"
+  description = "Change the cache password."
+  snippet = "ironclad setcachepass"
+
+  [[tools.commands]]
+  name = "setmasterpass"
+  description = "Change the master password."
+  snippet = "ironclad setmasterpass"
+
+  [[tools.commands]]
+  name = "tags"
+  description = "List database tags."
+  snippet = "ironclad tags"
+
+  # -------- Aliases / Help --------
+  [[tools.commands]]
+  name = "new"
+  description = "Alias for 'add'."
+  snippet = "ironclad new"
+
+  [[tools.commands]]
+  name = "help"
+  description = "Show help for a specific command."
+  snippet = "ironclad help <command>"
+
+  [[tools.commands]]
+  name = "--help"
+  description = "Show global help."
+  snippet = "ironclad --help"
+
+  [[tools.commands]]
+  name = "--version"
+  description = "Show version."
+  snippet = "ironclad --version"
+

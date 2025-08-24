@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import os
@@ -604,16 +605,19 @@ def import_toml(path: Path):
 # ------------------------------------------------------------
 # Optional: run a stored snippet (with confirm/copy)
 # ------------------------------------------------------------
+
 @app.command("run")
 def run_snippet(
     tool: str = typer.Argument(..., help="Tool name"),
     name: str = typer.Argument(..., help="Command name"),
-    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation"),
-    copy: bool = typer.Option(False, "--copy", "-c", help="Copy snippet to clipboard before running (macOS pbcopy)"),
-    print_only: bool = typer.Option(False, "--print", help="Only print snippet, don't execute"),
-    shell: str = typer.Option("/bin/zsh", "--shell", help="Shell to execute under"),
+    exec_: bool = typer.Option(False, "--exec", "-x", help="Execute the snippet instead of just printing it"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation when executing"),
+    copy: bool = typer.Option(False, "--copy", "-c", help="Copy snippet to clipboard"),
+    raw: bool = typer.Option(True, "--raw/--no-raw", help="Print raw snippet only (default)"),
+    preview: bool = typer.Option(False, "--preview", help="Show a pretty panel before printing/executing"),
+    shell: str = typer.Option("/bin/zsh", "--shell", help="Shell to execute under when using --exec"),
 ):
-    """Print (and optionally execute) a stored snippet."""
+    """Default: print the stored snippet (easy to edit placeholders). Use --exec to actually run."""
     with db() as conn:
         tool_id = get_tool_id(conn, tool)
         if not tool_id:
@@ -625,24 +629,34 @@ def run_snippet(
             raise typer.Exit(f"No command '{name}' for tool '{tool}'.")
         snippet, desc = row
 
-    console.print(Panel.fit(f"[bold]{tool}[/] · [bold]{name}[/]\n{desc or ''}"))
-    console.print(Syntax(snippet or "", "bash", word_wrap=True))
+    if preview:
+        console.print(Panel.fit(f"[bold]{tool}[/] · [bold]{name}[/]\n{desc or ''}"))
+        if not raw:
+            console.print(Syntax(snippet or "", "bash", word_wrap=True))
 
+    # Always optionally copy
     if copy:
         try:
-            p = subprocess.run(["pbcopy"], input=(snippet or "").encode(), check=True)
+            subprocess.run(["pbcopy"], input=(snippet or "").encode(), check=True)
             console.print("[dim]Snippet copied to clipboard.[/]")
         except Exception:
             console.print("[dim]Clipboard copy failed (pbcopy not available).[/]")
 
-    if print_only:
+    # DEFAULT BEHAVIOR: print raw snippet and exit (no execution)
+    if not exec_:
+        # print just the snippet so you can edit placeholders quickly
+        sys.stdout.write((snippet or "") + ("\n" if not (snippet or "").endswith("\n") else ""))
         raise typer.Exit(0)
+
+    # EXECUTION PATH (only when --exec/-x is provided)
+    # Show snippet plainly once when not in raw mode and no preview was requested
+    if not preview and not raw:
+        console.print(Syntax(snippet or "", "bash", word_wrap=True))
 
     if not yes:
         if not typer.confirm("Run this command?", default=False):
             raise typer.Exit(1)
 
-    # Execute via chosen shell
     try:
         subprocess.run([shell, "-lc", snippet], check=True)
     except subprocess.CalledProcessError as e:

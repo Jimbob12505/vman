@@ -1,0 +1,406 @@
+title = "vman import: Docker CLI + Compose"
+
+[[tools]]
+name = "docker"
+description = "Docker CLI: build images, run/manage containers, networks, volumes, registries, and Compose apps."
+tags = ["docker", "containers", "images", "compose", "registry", "ops", "dev", "network", "volume"]
+
+  # ---------------- General / Info ----------------
+  [[tools.commands]]
+  name = "version"
+  description = "Show client/server versions and API compatibility (quick sanity check for troubleshooting)."
+  snippet = "docker version"
+
+  [[tools.commands]]
+  name = "info"
+  description = "Display system-wide info: storage driver, total images/containers, default registry, etc."
+  snippet = "docker info"
+
+  [[tools.commands]]
+  name = "help"
+  description = "Show help for docker or a specific subcommand (e.g., docker help run)."
+  snippet = "docker help <subcommand>"
+
+  # ---------------- Registry / Auth ----------------
+  [[tools.commands]]
+  name = "login"
+  description = "Log in to a registry (stores auth in ~/.docker/config.json)."
+  snippet = "docker login <registry>"
+
+  [[tools.commands]]
+  name = "logout"
+  description = "Log out of a registry and remove saved credentials."
+  snippet = "docker logout <registry>"
+
+  [[tools.commands]]
+  name = "pull"
+  description = "Pull an image from a registry (optionally specific tag or digest)."
+  snippet = "docker pull <image>[:<tag>]"
+
+  [[tools.commands]]
+  name = "push"
+  description = "Push a local image (tagged) to a registry."
+  snippet = "docker push <image>[:<tag>]"
+
+  [[tools.commands]]
+  name = "tag"
+  description = "Add a new name/tag to an existing local image (retag for pushing or versioning)."
+  snippet = "docker tag <src-image>:<src-tag> <dest-image>:<dest-tag>"
+
+  [[tools.commands]]
+  name = "search"
+  description = "Search Docker Hub for images matching a keyword."
+  snippet = "docker search <keyword>"
+
+  [[tools.commands]]
+  name = "save"
+  description = "Save image(s) to a tar archive (portable export, good for offline moves)."
+  snippet = "docker save -o <path/to/image.tar> <image>[:<tag>]"
+
+  [[tools.commands]]
+  name = "load"
+  description = "Load images from a tar archive (inverse of docker save)."
+  snippet = "docker load -i <path/to/image.tar>"
+
+  # ---------------- Images (build/list/inspect/clean) ----------------
+  [[tools.commands]]
+  name = "images"
+  description = "List local images with repository, tag, size; add --digests for content digests."
+  snippet = "docker images"
+
+  [[tools.commands]]
+  name = "rmi"
+  description = "Remove one or more images by name, tag, or ID."
+  snippet = "docker rmi <image>..."
+
+  [[tools.commands]]
+  name = "image-prune"
+  description = "Remove dangling/unused images to reclaim disk space."
+  snippet = "docker image prune -f"
+
+  [[tools.commands]]
+  name = "image-inspect"
+  description = "Show low-level JSON metadata for images (env, layers, config)."
+  snippet = "docker image inspect <image>"
+
+  [[tools.commands]]
+  name = "history"
+  description = "Display the history of an image (layers and commands)."
+  snippet = "docker history <image>"
+
+  [[tools.commands]]
+  name = "build"
+  description = "Build an image from a Dockerfile in the current directory with a tag."
+  snippet = "docker build -t <image>:<tag> ."
+
+  [[tools.commands]]
+  name = "build-no-cache"
+  description = "Build an image ignoring cache to force fresh steps."
+  snippet = "docker build --no-cache -t <image>:<tag> ."
+
+  # ---------------- Containers (run/exec/logs/ps/lifecycle) ----------------
+  [[tools.commands]]
+  name = "run-detached"
+  description = "Run a container in the background with a name and published port(s)."
+  snippet = "docker run -d --name <container> -p <hostPort>:<containerPort> <image>:<tag>"
+
+  [[tools.commands]]
+  name = "run-interactive"
+  description = "Run a container interactively with a TTY (useful for debugging shells)."
+  snippet = "docker run -it --rm --name <container> <image>:<tag> /bin/sh"
+
+  [[tools.commands]]
+  name = "run-env"
+  description = "Pass environment variables to the container at runtime."
+  snippet = "docker run -d --name <container> -e KEY=value -e OTHER=value <image>:<tag>"
+
+  [[tools.commands]]
+  name = "run-mount"
+  description = "Bind mount a host directory into the container (useful for dev workflows)."
+  snippet = "docker run -d --name <container> -v <hostPath>:<containerPath> <image>:<tag>"
+
+  [[tools.commands]]
+  name = "run-network"
+  description = "Attach the container to a specific user-defined network."
+  snippet = "docker run -d --name <container> --network <network> <image>:<tag>"
+
+  [[tools.commands]]
+  name = "ps"
+  description = "List running containers with names, image, status, and ports."
+  snippet = "docker ps"
+
+  [[tools.commands]]
+  name = "ps-all"
+  description = "List all containers (running, exited, created)."
+  snippet = "docker ps -a"
+
+  [[tools.commands]]
+  name = "logs"
+  description = "Show container logs (add --since, --tail, etc. for filtering)."
+  snippet = "docker logs <container>"
+
+  [[tools.commands]]
+  name = "logs-follow"
+  description = "Stream container logs (follow) to watch live output."
+  snippet = "docker logs -f <container>"
+
+  [[tools.commands]]
+  name = "exec-sh"
+  description = "Open a shell inside a running container (sh)."
+  snippet = "docker exec -it <container> sh"
+
+  [[tools.commands]]
+  name = "exec-bash"
+  description = "Open a shell inside a running container (bash, if installed)."
+  snippet = "docker exec -it <container> bash"
+
+  [[tools.commands]]
+  name = "cp-from"
+  description = "Copy files/folders from a container to the host."
+  snippet = "docker cp <container>:<path/in/container> <path/on/host>"
+
+  [[tools.commands]]
+  name = "cp-to"
+  description = "Copy files/folders from the host into a container."
+  snippet = "docker cp <path/on/host> <container>:<path/in/container>"
+
+  [[tools.commands]]
+  name = "stop"
+  description = "Gracefully stop a running container (SIGTERM, then SIGKILL after timeout)."
+  snippet = "docker stop <container>"
+
+  [[tools.commands]]
+  name = "start"
+  description = "Start a stopped container."
+  snippet = "docker start <container>"
+
+  [[tools.commands]]
+  name = "restart"
+  description = "Restart a container (stop + start)."
+  snippet = "docker restart <container>"
+
+  [[tools.commands]]
+  name = "kill"
+  description = "Send a SIGKILL or custom signal to a container."
+  snippet = "docker kill <container>"
+
+  [[tools.commands]]
+  name = "rm"
+  description = "Remove one or more stopped containers (add -f to stop + remove)."
+  snippet = "docker rm <container>..."
+
+  [[tools.commands]]
+  name = "rm-force"
+  description = "Force remove running containers (danger: stops then removes)."
+  snippet = "docker rm -f <container>..."
+
+  [[tools.commands]]
+  name = "rename"
+  description = "Rename a container to a new name."
+  snippet = "docker rename <old-name> <new-name>"
+
+  [[tools.commands]]
+  name = "port"
+  description = "List or look up published port mappings for a container."
+  snippet = "docker port <container> [<containerPort>]"
+
+  [[tools.commands]]
+  name = "inspect"
+  description = "Show low-level JSON metadata for containers (env, mounts, networks)."
+  snippet = "docker inspect <container>"
+
+  [[tools.commands]]
+  name = "top"
+  description = "Display running processes inside a container."
+  snippet = "docker top <container>"
+
+  [[tools.commands]]
+  name = "stats"
+  description = "Live stream of container resource usage (CPU, memory, I/O)."
+  snippet = "docker stats [<container>...]"
+
+  [[tools.commands]]
+  name = "wait"
+  description = "Block until a container stops, then print its exit code (useful for scripting)."
+  snippet = "docker wait <container>"
+
+  # ---------------- Networks ----------------
+  [[tools.commands]]
+  name = "network-create"
+  description = "Create a user-defined network (default driver: bridge)."
+  snippet = "docker network create <network>"
+
+  [[tools.commands]]
+  name = "network-ls"
+  description = "List available Docker networks."
+  snippet = "docker network ls"
+
+  [[tools.commands]]
+  name = "network-inspect"
+  description = "Show detailed info about a network (connected containers, subnets)."
+  snippet = "docker network inspect <network>"
+
+  [[tools.commands]]
+  name = "network-connect"
+  description = "Connect an existing container to a network."
+  snippet = "docker network connect <network> <container>"
+
+  [[tools.commands]]
+  name = "network-disconnect"
+  description = "Disconnect a container from a network."
+  snippet = "docker network disconnect <network> <container>"
+
+  [[tools.commands]]
+  name = "network-rm"
+  description = "Remove one or more user-defined networks."
+  snippet = "docker network rm <network>..."
+
+  [[tools.commands]]
+  name = "network-prune"
+  description = "Remove all unused networks."
+  snippet = "docker network prune -f"
+
+  # ---------------- Volumes ----------------
+  [[tools.commands]]
+  name = "volume-create"
+  description = "Create a named volume for persistent data."
+  snippet = "docker volume create <volume>"
+
+  [[tools.commands]]
+  name = "volume-ls"
+  description = "List volumes available on the host."
+  snippet = "docker volume ls"
+
+  [[tools.commands]]
+  name = "volume-inspect"
+  description = "Show details about a volume (mountpoint, driver)."
+  snippet = "docker volume inspect <volume>"
+
+  [[tools.commands]]
+  name = "volume-rm"
+  description = "Remove one or more volumes (must not be in use)."
+  snippet = "docker volume rm <volume>..."
+
+  [[tools.commands]]
+  name = "volume-prune"
+  description = "Remove all unused volumes (careful: deletes data)."
+  snippet = "docker volume prune -f"
+
+  # ---------------- System cleanup ----------------
+  [[tools.commands]]
+  name = "system-prune"
+  description = "Remove stopped containers, dangling images, and unused networks."
+  snippet = "docker system prune -f"
+
+  [[tools.commands]]
+  name = "system-prune-all"
+  description = "Aggressive cleanup: also remove unused images (not just dangling)."
+  snippet = "docker system prune -a -f"
+
+  # ---------------- Buildx (multi-arch builds) ----------------
+  [[tools.commands]]
+  name = "buildx-ls"
+  description = "List BuildKit builders (useful when doing multi-arch or remote builds)."
+  snippet = "docker buildx ls"
+
+  [[tools.commands]]
+  name = "buildx-create"
+  description = "Create and bootstrap a new builder instance (e.g., for multi-arch)."
+  snippet = "docker buildx create --name <builder> --use --bootstrap"
+
+  [[tools.commands]]
+  name = "buildx-use"
+  description = "Switch the current builder to the named one."
+  snippet = "docker buildx use <builder>"
+
+  [[tools.commands]]
+  name = "buildx-build"
+  description = "Build and optionally push a multi-platform image with Buildx."
+  snippet = "docker buildx build --platform linux/amd64,linux/arm64 -t <image>:<tag> --push <context>"
+
+  [[tools.commands]]
+  name = "buildx-prune"
+  description = "Clean up Buildx builder cache and artifacts."
+  snippet = "docker buildx prune -f"
+
+  # ---------------- Compose (v2: docker compose ...) ----------------
+  [[tools.commands]]
+  name = "compose-up"
+  description = "Create and start services in the background from compose.yaml (detached)."
+  snippet = "docker compose up -d"
+
+  [[tools.commands]]
+  name = "compose-up-build"
+  description = "Build images as needed and then start services (detached)."
+  snippet = "docker compose up -d --build"
+
+  [[tools.commands]]
+  name = "compose-down"
+  description = "Stop and remove containers, networks; keep volumes and images by default."
+  snippet = "docker compose down"
+
+  [[tools.commands]]
+  name = "compose-down-volumes"
+  description = "Tear down the stack and remove named volumes (data loss)."
+  snippet = "docker compose down -v"
+
+  [[tools.commands]]
+  name = "compose-build"
+  description = "Build or rebuild images defined in compose.yaml."
+  snippet = "docker compose build"
+
+  [[tools.commands]]
+  name = "compose-ps"
+  description = "List Compose-managed containers and their states."
+  snippet = "docker compose ps"
+
+  [[tools.commands]]
+  name = "compose-logs"
+  description = "Show logs from all services (add -f to follow)."
+  snippet = "docker compose logs"
+
+  [[tools.commands]]
+  name = "compose-logs-service"
+  description = "Show logs for a single service with follow and tail options."
+  snippet = "docker compose logs -f --tail 200 <service>"
+
+  [[tools.commands]]
+  name = "compose-exec"
+  description = "Execute a command in a running service container (interactive shell)."
+  snippet = "docker compose exec <service> sh"
+
+  [[tools.commands]]
+  name = "compose-run"
+  description = "Run a one-off container for a service (does not need to be defined as command)."
+  snippet = "docker compose run --rm <service> <cmd>"
+
+  [[tools.commands]]
+  name = "compose-restart"
+  description = "Restart one or more services defined in compose.yaml."
+  snippet = "docker compose restart [<service>...]"
+
+  [[tools.commands]]
+  name = "compose-stop"
+  description = "Stop services without removing them (can start again quickly)."
+  snippet = "docker compose stop [<service>...]"
+
+  [[tools.commands]]
+  name = "compose-start"
+  description = "Start previously stopped services."
+  snippet = "docker compose start [<service>...]"
+
+  [[tools.commands]]
+  name = "compose-pull"
+  description = "Pull service images as defined in compose.yaml."
+  snippet = "docker compose pull [<service>...]"
+
+  [[tools.commands]]
+  name = "compose-push"
+  description = "Push built service images to the registry."
+  snippet = "docker compose push [<service>...]"
+
+  [[tools.commands]]
+  name = "compose-config"
+  description = "Validate and render the effective Compose configuration (useful for debugging)."
+  snippet = "docker compose config"
+
